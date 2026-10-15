@@ -103,7 +103,7 @@ and every secret or PII value is a fake canary. Only run this against models and
 authorized to test, and follow the provider's usage policies and responsible-disclosure norms.
 
 ## How this was built
-Built with AI coding assistance as part of my AI-agent operations work; I designed the test approach and reviewed every case.
+Built with AI coding assistance. I defined the requirements, ran the tests, and reviewed the changes.
 
 ## License
 MIT. See [LICENSE](LICENSE).
