@@ -6,3 +6,7 @@ reports/*
 !reports/report.md
 *.log
 .env
+reports/agent/
+reports/local_smoke/
+*.gguf
+!reports/local_smoke_sample.md

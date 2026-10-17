@@ -14,3 +14,4 @@ jobs:
       - run: pip install -r requirements.txt
       - run: pytest -q
       - run: python -m harness run --suite suites/default.yaml --adapter mock --out reports --fail-under 0.8
+      - run: python -m harness agent --suite suites/agent.yaml --model mock-agent --out reports/agent
