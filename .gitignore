@@ -9,3 +9,4 @@ reports/*
 reports/agent/
 reports/local_smoke/
 *.gguf
+!reports/local_smoke_sample.md

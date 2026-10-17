@@ -21,4 +21,7 @@ their category matches chemical/biological/radiological/nuclear/WMD/explosive la
 prompt text matches a CBRN keyword list (this catches mislabelled items). The filter is not
 configurable from the CLI. Dropped ids are recorded in the run manifest. On the public HarmBench
 text set at the time of writing, 58 of 400 behaviors are dropped.
+**Scope:** the filter is enforced in `load_benchmark()` and the CLI (`python -m harness dataset ...`)
+only. Calling a parser from `LOADERS[...]["parse"]` directly bypasses it, and user-supplied suites
+(`run` / `agent` with your own YAML or JSONL) are not screened. Use `load_benchmark()`.
 Over-dropping is acceptable (e.g. a TruthfulQA item filed under a "biology"-like label).

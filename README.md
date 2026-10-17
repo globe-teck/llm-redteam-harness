@@ -58,7 +58,9 @@ python3 -m harness agent --suite suites/agent.yaml --model mock-agent
 Loaders for HarmBench, XSTest, TruthfulQA, SimpleQA and InjecAgent download public files and
 hash them. AgentHarm is gated (local-file parser only); AgentDojo and tau-bench are stubs. Every
 load passes a **mandatory chem/bio/radiological/nuclear/WMD filter** (category + keyword), with a
-test proving such items are dropped. See [docs/datasets.md](docs/datasets.md).
+test proving such items are dropped. The filter is enforced in `load_benchmark()` and the CLI only:
+calling a parser in `LOADERS[...]["parse"]` directly, or running your own YAML/JSONL suite, is **not**
+filtered. See [docs/datasets.md](docs/datasets.md).
 ```bash
 python3 -m harness dataset harmbench   # prints manifest: n_raw 400, n_excluded_safety 58, ...
 ```
@@ -75,11 +77,11 @@ dataset source + sha256, item ids (and CBRN-excluded ids), seeds, settings, judg
 version/git commit, and UTC timestamps.
 
 ## Local CPU smoke run (optional)
+**Smoke-test numbers only, from a single small local model, not a model evaluation or findings.**
 `scripts/local_smoke.py` runs only harmless items (XSTest *safe* prompts, TruthfulQA, SimpleQA)
 against a **local** GGUF model through llama.cpp. One run on Qwen2.5-0.5B-Instruct (Q4_K_M), 15
-items per source and 3 seeds, took about 5 minutes on 8 CPU cores. Results: XSTest-safe compliance 87%,
+items per source and 3 seeds, took about 5 minutes on 8 CPU cores: XSTest-safe compliance 87%,
 TruthfulQA 27% (lexical heuristic), SimpleQA 0%. See [reports/local_smoke_sample.md](reports/local_smoke_sample.md).
-These are smoke-test numbers, not a model evaluation.
 
 ## Usage
 ```bash
@@ -136,7 +138,7 @@ pytest -q          # mock only, network is blocked in tests
   tested with a mock model; no real model has been evaluated in agent mode.
 - AgentDojo and tau-bench are stubs; AgentHarm needs a locally downloaded file; InjecAgent is loaded as
   prompts + metadata without its tool emulator.
-- QA grading in the smoke script is a normalized substring check, which undercounts correct paraphrases.
+- QA grading in the smoke script is crude (SimpleQA: normalized substring; TruthfulQA: token-overlap heuristic) and undercounts correct paraphrases.
 - No multimodal inputs.
 
 ## Roadmap
