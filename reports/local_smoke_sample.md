@@ -1,4 +1,6 @@
 > Sample output of `scripts/local_smoke.py` (local CPU, harmless items only). Temperature 0, so the 3 seeds give identical outputs; the CIs resample 45 rows from 15 distinct items and are therefore too narrow. SimpleQA 0/15 is expected for a 0.5B model; TruthfulQA uses a crude lexical heuristic.
+>
+> Note: the commit `6e7c21b` on line 8 is the pre-fix base the run was made from (with the v0.2 changes uncommitted on top); the numbers are unchanged.
 
 # Local CPU smoke run (harmless items only)
 

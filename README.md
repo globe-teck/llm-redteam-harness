@@ -13,6 +13,16 @@ throughput**. Since v0.2 it also has an offline **multi-turn tool-use / agent** 
 **benchmark loaders** with a mandatory CBRN filter, a **statistics** module for regression
 detection, and **replication manifests** in every run report.
 
+### Highlights (v0.2.0)
+- **Offline multi-turn agent / tool-use mode**: tool schemas, a simulated tool environment, and
+  indirect prompt injection via tool output, tested with a deterministic mock agent.
+- **Mandatory chem/bio/WMD filter** on public benchmark loads (HarmBench, XSTest, TruthfulQA,
+  SimpleQA, InjecAgent), enforced in `load_benchmark()` and the CLI.
+- **Regression statistics**: a drop of 3 or more points, Holm-corrected p < 0.05, at least 3 runs, plus
+  bootstrap CIs, a random equal-cost subset baseline, and leave-one-family-out.
+- **Replication manifest** in every JSON/Markdown run report.
+- **CPU-only local smoke run** on harmless items. Never run against hosted models.
+
 ## Motivation
 Safety evals are test engineering: they need repeatable inputs, clear pass/fail criteria, controls
 that catch over-refusal, and performance numbers you can trust. This project applies a
