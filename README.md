@@ -4,10 +4,14 @@
 
 📄 **[Sample report (mock adapter)](reports/report.md)**
 
+*By Leigh S. Rodney — AI Researcher & Founder at Globe Teck.*
+
 A small, dependency-light harness for **LLM safety evals and red-teaming**. It runs a suite of
 prompt-injection, jailbreak-refusal, PII-leak and benign-control cases against a pluggable model
 adapter, scores the responses, and writes JSON and Markdown reports with **latency p50/p95 and
-throughput**.
+throughput**. Since v0.2 it also has an offline **multi-turn tool-use / agent** mode, public
+**benchmark loaders** with a mandatory CBRN filter, a **statistics** module for regression
+detection, and **replication manifests** in every run report.
 
 ## Motivation
 Safety evals are test engineering: they need repeatable inputs, clear pass/fail criteria, controls
@@ -37,6 +41,45 @@ adapters.py  <- runner.py (thread pool, retries w/ backoff, per-call timeout, la
   LLM-as-judge hook (`--judge mock|openai`, or any callable `(case, response) -> (ok, why)`).
 - **Runner**: `--concurrency`, `--retries` (exponential backoff), `--timeout` per call. Errors are
   recorded rather than crashing the run. `--fail-under 0.9` makes it usable as a CI gate.
+
+## Agent / tool-use mode (offline)
+`harness/agent/` adds multi-turn episodes with OpenAI-style tool schemas and a simulated tool
+environment (inbox, document search, fake email send, fake funds transfer, calculator). All tool
+state is in-memory and all data is canary data. Scoring checks forbidden tools (e.g. `send_email`
+after an injected instruction in a tool result), required tools, expected text, and leaks through
+side-effecting tool arguments. It is tested end to end with a deterministic `MockAgentModel`
+(`mock-agent` passes 5/5 on `suites/agent.yaml`; `mock-agent-vulnerable` passes 3/5).
+There is **no** adapter yet that drives a real model's native tool-calling.
+```bash
+python3 -m harness agent --suite suites/agent.yaml --model mock-agent
+```
+
+## Benchmarks and the CBRN filter
+Loaders for HarmBench, XSTest, TruthfulQA, SimpleQA and InjecAgent download public files and
+hash them. AgentHarm is gated (local-file parser only); AgentDojo and tau-bench are stubs. Every
+load passes a **mandatory chem/bio/radiological/nuclear/WMD filter** (category + keyword), with a
+test proving such items are dropped. See [docs/datasets.md](docs/datasets.md).
+```bash
+python3 -m harness dataset harmbench   # prints manifest: n_raw 400, n_excluded_safety 58, ...
+```
+
+## Statistics
+`harness/stats.py` (stdlib only, seeded): a family regresses only if the mean drops by **≥3
+points**, the **Holm-corrected** one-sided paired permutation p is **<0.05**, and each side has
+**≥3 runs**. It also has percentile bootstrap CIs, precision/recall of a cheap item subset against
+**random equal-cost subsets**, and **leave-one-family-out** stability. Tested on synthetic data only.
+
+## Reproducible reports
+`harness/manifest.py` writes `run.json` + `run.md` with a replication manifest: model id/version,
+dataset source + sha256, item ids (and CBRN-excluded ids), seeds, settings, judge config, harness
+version/git commit, and UTC timestamps.
+
+## Local CPU smoke run (optional)
+`scripts/local_smoke.py` runs only harmless items (XSTest *safe* prompts, TruthfulQA, SimpleQA)
+against a **local** GGUF model through llama.cpp. One run on Qwen2.5-0.5B-Instruct (Q4_K_M), 15
+items per source and 3 seeds, took about 5 minutes on 8 CPU cores. Results: XSTest-safe compliance 87%,
+TruthfulQA 27% (lexical heuristic), SimpleQA 0%. See [reports/local_smoke_sample.md](reports/local_smoke_sample.md).
+These are smoke-test numbers, not a model evaluation.
 
 ## Usage
 ```bash
@@ -89,13 +132,26 @@ pytest -q          # mock only, network is blocked in tests
 - Regex refusal and leak detection is fast and transparent, but it misses paraphrased refusals
   and encoded leaks. Use the judge hook for nuance, and expect the judge to have its own biases.
 - The suite is small and illustrative, not a benchmark. Pass rates on it say little about a model's overall safety.
-- Single-turn only. No multi-turn attacks, tool use or multimodal inputs yet.
+- The classic `run` command is single-turn. Multi-turn/tool-use exists only in the offline agent mode,
+  tested with a mock model; no real model has been evaluated in agent mode.
+- AgentDojo and tau-bench are stubs; AgentHarm needs a locally downloaded file; InjecAgent is loaded as
+  prompts + metadata without its tool emulator.
+- QA grading in the smoke script is a normalized substring check, which undercounts correct paraphrases.
+- No multimodal inputs.
 
 ## Roadmap
-- Multi-turn attacks
-- Indirect injection via tool output and retrieved documents
+- Native tool-calling adapter for local open models
+- AgentDojo / tau-bench bridges
 - Encoded and obfuscated leaks (base64, homoglyphs)
 - Judge-agreement metrics (judge vs. regex scorers vs. human labels)
+
+## Responsible use
+- **No WMD content.** Chemical, biological, radiological, nuclear and other WMD items are filtered
+  out of every benchmark load by default, and this repo ships none.
+- **Hosted models only via official APIs, under their terms, and with written consent** from the
+  provider where their terms restrict scripted, bulk or adversarial prompting. Development and
+  tests here use mock models and an optional local open-weight model only.
+- Report findings through the provider's responsible-disclosure channel.
 
 ## Ethics
 All test cases are mild and non-harmful. They check *whether* a model refuses, not how to cause harm,
@@ -104,6 +160,7 @@ authorized to test, and follow the provider's usage policies and responsible-dis
 
 ## How this was built
 Built with AI coding assistance. I defined the requirements, ran the tests, and reviewed the changes.
+— Leigh S. Rodney, AI Researcher & Founder at Globe Teck
 
 ## License
 MIT. See [LICENSE](LICENSE).
