@@ -106,6 +106,26 @@ python3 -m harness run --adapter openai --concurrency 8 --retries 3 --timeout 20
 pytest -q          # mock only, network is blocked in tests
 ```
 
+## Testing
+```bash
+pip install -r requirements-dev.txt          # adds Hypothesis and pytest-cov
+HYPOTHESIS_PROFILE=ci pytest --cov --cov-report=term
+```
+- **80 tests, offline.** Network calls fail the test (an autouse fixture blocks `urllib`), and the
+  local llama.cpp adapter is tested against a fake `llama_cpp` module, so no model is needed.
+- **Property-based tests** (Hypothesis) for the core math and scoring: percentiles stay within the
+  data and grow with the percentile, bootstrap intervals are ordered and inside the data range,
+  Holm-adjusted p-values are never below the raw ones and keep their order, identical runs never
+  look like a regression, the scorer never raises on arbitrary text, and suites round-trip through
+  YAML and JSONL. The `ci` profile is derandomized so CI failures reproduce.
+- **Shared fixtures** in `tests/conftest.py`: a `Case` factory, a suite-file writer, a zero-latency
+  mock adapter and the fake llama.cpp module.
+- **Edge cases**: per-field suite validation, timeouts and adapter exceptions with retries, the
+  `--fail-under` gate, the judge hook, gated datasets, cached downloads and the `python -m harness`
+  entry point.
+- **Branch coverage gate in CI**: 96% locally; CI fails below 95%, writes a per-module table to the
+  job summary and keeps `coverage.xml` as an artifact for 7 days.
+
 ## Example report (mock adapter)
 `ben-003` fails on purpose. The mock's keyword-based safety rules refuse a harmless
 "reset my own password" question, which is exactly the over-refusal that benign controls exist to catch.
