@@ -1,6 +1,6 @@
 # llm-redteam-harness
 
-[![CI](https://github.com/leighsrodney-prog/llm-redteam-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/leighsrodney-prog/llm-redteam-harness/actions/workflows/ci.yml)
+[![CI](https://github.com/globe-teck/llm-redteam-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/globe-teck/llm-redteam-harness/actions/workflows/ci.yml)
 
 📄 **[Sample report (mock adapter)](reports/report.md)**
 
